@@ -1,0 +1,6 @@
+*.key
+venv
+*.csv
+*.zip
+tmp
+*.log
