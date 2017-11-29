@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import sys
+import sys, os
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, timedelta
 from progress.bar import Bar
@@ -9,7 +9,7 @@ from keras.layers import Dense, Activation, SimpleRNN
 import matplotlib.pyplot as plt
 
 
-def genPriceData(csv='Webdata/krakenEUR.csv'):
+def genPriceData(csv='Webdata/krakenEUR.csv', output='Webdata/XBTEUR.csv'):
     df = pd.DataFrame.from_csv(csv, header=None)
     df.index = df.index.map(lambda x:datetime.fromtimestamp(x))
     df.columns = ['Price','Volume']
@@ -26,10 +26,12 @@ def genPriceData(csv='Webdata/krakenEUR.csv'):
     scaler = MinMaxScaler(feature_range=(0, 1))
     df[:] = scaler.fit_transform(df[:])
 
-    df.to_csv(path_or_buf="Webdata/XBTEUR.csv")
+    print(df[0])
+    print(df[-1])
+    df.to_csv(path_or_buf=output)
 
 
-def genTrainData(steps = 10, exp=4, csv='Webdata/XBTEUR.csv'):
+def genTrainData(steps = 10, exp=4, csv='Webdata/XBTEUR.csv', output="Webdata/train.csv"):
     df = pd.read_csv(csv, header=0, index_col=0)
     datadict = {}
     bar = Bar('Preparing Data', max=df.shape[0]-steps)
@@ -49,7 +51,7 @@ def genTrainData(steps = 10, exp=4, csv='Webdata/XBTEUR.csv'):
 
     bar.finish()
     df2 = pd.DataFrame.from_dict(datadict, orient='index')
-    df2.to_csv(path_or_buf="Webdata/train.csv")
+    df2.to_csv(path_or_buf=output)
     print(df2)
 
 
@@ -107,9 +109,14 @@ def fitData():
 
     return test_results, test_labels
 
+
+for f in os.listdir("Webdata"):
+    if f.endswith(".csv"):
+        genPriceData(csv=f, output='data_'+f)
+
 # genPriceData()
 # genTrainData()
-fitData()
+# fitData()
 
 # def botSim(test_results, test_labels)
 #     #Start balance

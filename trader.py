@@ -1,5 +1,7 @@
 class trader:
 
+    balance = {}
+    
     def __init__(self, balance):
         self.balance = balance
 
@@ -9,7 +11,12 @@ class trader:
 
         if aofsell:
             amount = amount/price
-
+            
+        if not buy in self.balance:
+            self.balance[buy] = 0
+        if not sell in self.balance:
+            self.balance[sell] = 0
+            
         b = self.balance[buy]
         s = self.balance[sell]
 

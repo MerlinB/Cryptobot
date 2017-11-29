@@ -3,4 +3,5 @@ venv
 *.csv
 *.zip
 tmp
+__pycache__
 *.log
