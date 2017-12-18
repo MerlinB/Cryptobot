@@ -7,6 +7,10 @@ import pandas as pd
 import time, datetime
 import sys,os
 
+# import matplotlib as mpl
+from matplotlib import pyplot
+# mpl.use('TkAgg')
+
 data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Bitfinex/')
 
 def bitfinex(until='1451606400', resolution='1h'):
@@ -99,7 +103,6 @@ def clean_data(filenames, max_gap=10):
         
         # Drop all columns but Close and Volume
         array = array.drop(['Open','High','Low'], axis=1)
-        array.columns = [filename+column for column in array.columns]
         
         # Fill missing dates
         dates = pd.date_range(array.index[-1],array.index[0],freq='1H')
@@ -110,13 +113,17 @@ def clean_data(filenames, max_gap=10):
         # TODO: Problem if DF ends with empty row.
         last = array.iloc[0]
         for index, row in array[1:].iterrows():
-            if row[1] == 0:
-                row[1] = last[1]
+            if row[0] == 0:
+                row[0] = last[0]
             last = row
         array = array[::-1]
         
         # Truncate at max acceptable gap
         array = array.truncate(after=end)
+
+        # Rename Columns
+        array.columns = [filename+column for column in array.columns]
+
             
         return array
 
@@ -127,6 +134,16 @@ def clean_data(filenames, max_gap=10):
     combined = pd.concat(dframes, axis=1)
     combined.to_csv(path_or_buf=os.path.join(data_path,'Cleaned_data.csv'))
     return combined
+
+
+def show():
+    df = pd.read_csv(os.path.join(data_path, 'Cleaned_data.csv'), index_col=0)#, parse_dates=True, date_parser=dateparse)
+    # pyplot.figure()
+    price = df[['LitecoinClose','MoneroClose','EthereumClose']]
+    # price = df[['BitcoinVolume','LitecoinVolume','MoneroVolume','EthereumVolume']]
+    price.plot()
+    pyplot.show()
+
 
 if __name__ == "__main__":
     # bitfinex()
@@ -140,6 +157,8 @@ if __name__ == "__main__":
     
     array = clean_data(filenames=filenames)
     print(array)
+    show()
+    # print(find_gap(10, filenames))
     
     
     

@@ -31,8 +31,16 @@ def genPriceData(csv='Webdata/krakenEUR.csv', output='Webdata/XBTEUR.csv'):
     df.to_csv(path_or_buf=output)
 
 
-def genTrainData(steps = 10, exp=4, csv='Webdata/XBTEUR.csv', output="Webdata/train.csv"):
-    df = pd.read_csv(csv, header=0, index_col=0)
+def genTrainData(df, steps = 10, exp=4, function=1, average=False):
+    '''
+    TODO: Implement function
+    Collects the [steps] last entries in one row, then every [steps]^1 entry from [steps]^2, and so on, until every [steps]^([exp]-1) step from [steps]^[exp].
+    Example with steps=3, exp=4, function=1, average=False:
+    ((1 2 3) 6 9) 18 27) 54 81
+    Example with steps=10, exp=4, function=0.5, average=False:
+    ((1 2 3 4 5 6 7 8 9 10) 20 40 60 80 100) 333 666 1000) 5000 10000)
+    The last [steps]^[exp] entries get cut off. If average is True, every [exp] cycle Collects all [steps] in an average value to append instead of appending all values.
+    '''
     datadict = {}
     bar = Bar('Preparing Data', max=df.shape[0]-steps)
     for index, row in df.iloc[steps**exp:].iterrows():
@@ -42,17 +50,20 @@ def genTrainData(steps = 10, exp=4, csv='Webdata/XBTEUR.csv', output="Webdata/tr
             last = last.iloc[::(steps**x), :].iloc[::-1]
             last = last.ix[1:]
             l = l+[last.loc[x] for x in last.index]
-
-        av = sum(l)/float(len(l)) #Average instead of large list
-        new = row.append(av)
+        
+        if average:
+            av = sum(l)/float(len(l)) #Average instead of large list
+            new = row.append(av)
+        else:
+            new = row.append(l)
+            
         new.index = range(new.shape[0])
         datadict[index] = new
         bar.next()
 
     bar.finish()
     df2 = pd.DataFrame.from_dict(datadict, orient='index')
-    df2.to_csv(path_or_buf=output)
-    print(df2)
+    return df2
 
 
 def fitData():
@@ -109,49 +120,19 @@ def fitData():
 
     return test_results, test_labels
 
+# 
+# for f in os.listdir("Webdata"):
+#     if f.endswith(".csv"):
+#         genPriceData(csv=f, output='data_'+f)
 
-for f in os.listdir("Webdata"):
-    if f.endswith(".csv"):
-        genPriceData(csv=f, output='data_'+f)
-
+if __name__ == "__main__":
+    df = genTrainData(pd.DataFrame(np.arange(100000)))
+    print(df)
 # genPriceData()
 # genTrainData()
 # fitData()
 
-# def botSim(test_results, test_labels)
-#     #Start balance
-#     btc = 10.0
-#     eur = 10000.0
-#
-#     lastprice = test_labels[-1]
-#
-#     #Strategies
-#     allin = lastprice*(btc+(eur/test_labels[0]))
-#     tenhav = 0
-#     dnn = 0
-#
-#     for t in test_labels:
-
-    #     change = (result/test_labels[n-1]-1)
-    #     print(change*100,"%")
-    #     if eur >= btc*change*test_labels[n-1]:
-    #         btc = btc + btc*change
-    #         eur = eur - btc*change*test_labels[n-1]
-    #     elif change >= 0 :
-    #         btc = btc + eur/test_labels[n-1]
-    #         eur = 0
-    #     print("BTC:",btc,"EUR:",eur)
-    #     if eur<0 or btc<0:
-    #         print("ERROR")
-    #         break
-    #
-    # print("All in: ",(10000/test_labels[0] + 10)*test_labels[-1])
-    # print("AI: ",btc*test_labels[-1]+eur)
-
-
 # dataset = read_csv('Webdata/XBTEUR.csv', header=0, index_col=0)
-# for row in dataset:
-#     print row
 # values = dataset.values
 # values = values.astype('float32')
 #
